@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
+// eslint-disable-next-line
 import Chart from 'chart.js/auto';
  
 // https://algotrading101.com/learn/yahoo-finance-api-guide/
@@ -54,11 +55,11 @@ function RandomWalk(props) {
 	   	// setPrice(JSON.stringify(closePriceMap, null, 2));
 		
 		setGraphData({
-			labels: Object.keys(closePriceMap),
+			labels: Object.keys(closePriceMap).reverse(),
 			datasets: [
 				{
 					label: "Adjusted Close Price",
-					data: Object.values(closePriceMap),
+					data: Object.values(closePriceMap).reverse(),
 					fill: false,
 					backgroundColor: "rgb(255, 99, 132)",
 					borderColor: "rgba(255, 99, 132, 0.2)",
@@ -77,9 +78,7 @@ function RandomWalk(props) {
 
 	return (
 	<div>
-		<h2>What I get:</h2>
-		<p>Symbol: {symbol}</p>
-		<p>Price: </p>
+		<p>Historical prices of {symbol}: </p>
 		{graphData && <Line data={graphData} />}
 	</div>
 	);
