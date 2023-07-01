@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-
+import { Line } from "react-chartjs-2";
+import Chart from 'chart.js/auto';
+ 
 // https://algotrading101.com/learn/yahoo-finance-api-guide/
 // Yahoo Finance API is no longer public :(
 // "twelve-data" API is used instead :) --> but it did not fetch the adjusted close price
@@ -23,12 +25,13 @@ import React, { useState, useEffect } from "react";
 
 
 function RandomWalk(props) {
-	const [price, setPrice] = useState(null);
+	const [graphData, setGraphData] = useState(null);
 
 	const apiKey = "BUQKXF1N7IKZLUFR";
 	const symbol = props.symbol;
 	const interval = "daily";
 	const outputSize = 1;
+
 
 	async function fetchStockData(apiKey, symbol, interval, outputSize) {
 	// const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${interval}&outputsize=${outputSize}&apikey=${apiKey}`;
@@ -47,11 +50,24 @@ function RandomWalk(props) {
 			  closePriceMap[dateTime] = AllStockData[dateTime]["4. close"];
 			}
 		}
-		// alert(JSON.stringify(closePriceMap, null, 2));
-	   	setPrice(JSON.stringify(closePriceMap, null, 2));
+
+	   	// setPrice(JSON.stringify(closePriceMap, null, 2));
+		
+		setGraphData({
+			labels: Object.keys(closePriceMap),
+			datasets: [
+				{
+					label: "Adjusted Close Price",
+					data: Object.values(closePriceMap),
+					fill: false,
+					backgroundColor: "rgb(255, 99, 132)",
+					borderColor: "rgba(255, 99, 132, 0.2)",
+				},
+			],
+		});
+
 	} catch (error) {
 		console.error("Error fetching stock data:", error);
-		alert("Error fetching stock data:", error);
 	}
 	}
 
@@ -63,7 +79,8 @@ function RandomWalk(props) {
 	<div>
 		<h2>What I get:</h2>
 		<p>Symbol: {symbol}</p>
-		<p>Price: {price}</p>
+		<p>Price: </p>
+		{graphData && <Line data={graphData} />}
 	</div>
 	);
 }
