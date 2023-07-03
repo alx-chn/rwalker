@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 // eslint-disable-next-line
 import Chart from 'chart.js/auto';
- 
+
+// https://blog.quantinsti.com/random-walk/ 
+// stock price today has no relation or influence on the stock price tomorrow, and the direction the stock price goes is entirely random and unpredictable.
+// given enough trials, we are trying to find patterns in a seemingly random process. This helps us study a process and if possible, predict the outcome too.
+
+// A Monte Carlo simulation is a model used to predict the probability of different outcomes when the intervention of random variables is present.
+// The Law of Large Numbers is a fundamental concept in probability and statistics that says when you repeat an experiment many times, the average of the outcomes will get closer to the expected value. 
+
 // https://algotrading101.com/learn/yahoo-finance-api-guide/
 // Yahoo Finance API is no longer public :(
 // "twelve-data" API is used instead :) --> but it did not fetch the adjusted close price
@@ -27,14 +34,16 @@ import Chart from 'chart.js/auto';
 
 function RandomWalk(props) {
 	const [graphData, setGraphData] = useState(null);
+	const [startDate, setStartDate] = useState(null);
+	const [endDate, setEndDate] = useState(null);
+	const [days, setDays] = useState(null);
 
 	const apiKey = "BUQKXF1N7IKZLUFR";
 	const symbol = props.symbol;
 	const interval = "daily";
-	const outputSize = 1;
 
 
-	async function fetchStockData(apiKey, symbol, interval, outputSize) {
+	async function fetchStockData(apiKey, symbol, interval) {
 	// const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${interval}&outputsize=${outputSize}&apikey=${apiKey}`;
 	const url = `https://www.alphavantage.co/query?function=TIME_SERIES_${interval.toUpperCase()}_ADJUSTED&symbol=${symbol}&apikey=${apiKey}`;
 
@@ -52,18 +61,38 @@ function RandomWalk(props) {
 			}
 		}
 
-	   	// setPrice(JSON.stringify(closePriceMap, null, 2));
+		const closePriceArray = Object.entries(closePriceMap);
+		closePriceArray.reverse();
+		const slice = [];
+		const dailyReturn = [];
+		for (let i = 10; i < closePriceArray.length; i++) {
+			dailyReturn.push((closePriceArray[i][1] - closePriceArray[i-1][1])-1);
+			slice.push(closePriceArray[i]);
+		}
+		const reversedClosePriceMap = Object.fromEntries(slice);
+
+	   	setEndDate(Object.keys(reversedClosePriceMap)[Object.keys(reversedClosePriceMap).length -1]);
+		setStartDate(Object.keys(reversedClosePriceMap)[0]);
+		setDays(Object.keys(reversedClosePriceMap).length);
 		
 		setGraphData({
-			labels: Object.keys(closePriceMap).reverse(),
+			labels: Object.keys(reversedClosePriceMap),
 			datasets: [
 				{
 					label: "Adjusted Close Price",
-					data: Object.values(closePriceMap).reverse(),
+					data: Object.values(reversedClosePriceMap),
 					fill: false,
 					backgroundColor: "rgb(255, 99, 132)",
 					borderColor: "rgba(255, 99, 132, 0.2)",
 				},
+
+				{
+					label: 'Random Walk Adjusted Close Price',
+					data: Object.values(closePriceMap),
+					fill: false,
+					backgroundColor: 'rgb(75, 192, 192)',
+					borderColor: 'rgba(75, 192, 192, 0.2)',
+				}
 			],
 		});
 
@@ -73,12 +102,13 @@ function RandomWalk(props) {
 	}
 
 	useEffect(() => {
-	fetchStockData(apiKey, symbol, interval, outputSize);
-	}, [apiKey, symbol, interval, outputSize]);
+	fetchStockData(apiKey, symbol, interval);
+	}, [apiKey, symbol, interval]);
 
 	return (
 	<div>
-		<p>Historical prices of {symbol}: </p>
+		<p>Historical prices of {symbol} from {startDate} to {endDate}: </p>
+		<p>Duration: {days} days</p>
 		{graphData && <Line data={graphData} />}
 	</div>
 	);
